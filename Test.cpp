@@ -7,6 +7,8 @@ using namespace std;
 
 int main(int argc, char* argv[]) {  
 
+
+
     ifstream in; //this can be any name that we want.
     in.open(argv[1], ios::binary);
     if (!in.good()) {
