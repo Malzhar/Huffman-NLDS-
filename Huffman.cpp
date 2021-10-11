@@ -31,9 +31,7 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 // know how many times each of the symbols appears in the file. Once we have scanned through the entire file, we can
 // use the number of occurences to build a collection of nodes where each node represents the symbol and the 
 // weight(count) of that symbol. 
-//  
-//   
-// 
+
 
 	ifstream in;						// how we can get input from a file, "in" is the name we have chosen to use. 
 	in.open(inputFile, ios::binary);	// opening the given input file
@@ -58,6 +56,7 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 		arr[i]->left = NULL;		// each node's left and right child is initialized to NULL since they arent connected to anything yet. 
 		arr[i]->right = NULL; 
 	}
+
 	in.get(symbol);					// need to get the next symbol.  
 
 
@@ -68,17 +67,6 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 		in.get(symbol); 
 	}
 	in.close(); 
-	 
-	for (int i = 0; i < 32; i++) {
-		cout << setw(3) << i << setw(7) << arr[i] << " || "
-			<< setw(3) << i + 32 << setw(7) << arr[i + 32] << " || "
-			<< setw(3) << i + 64 << setw(7) << arr[i + 64] << " || "
-			<< setw(3) << i + 96 << setw(7) << arr[i + 96] << " || "
-			<< setw(3) << i + 128 << setw(7) << arr[i + 128] << " || "
-			<< setw(3) << i + 160 << setw(7) << arr[i + 160] << " || "
-			<< setw(3) << i + 192 << setw(7) << arr[i + 192] << " || "
-			<< setw(3) << i + 224 << setw(7) << arr[i + 224] << endl;
-	}
 }
 
 void Huffman::DecodeFile(string inputFile, string outputFile) {
@@ -147,16 +135,15 @@ void Huffman::MakeTreeBuilder(string inputFile, string outputFile) {
 	//	   left child points to the lowest index node and right child points to the next lowest weighted node. 
 	// d.) Make the higher index node point to NULL.
 	//
-	//
 
 	int smallest = 0;				// Variable to hold the weight value of the smallest weighted node.
 	int secondSmall = 0;			// Variable to hold the weight value of the next smallest weighted node. 
-	int smallestIndex;				// Variable to hold the postion of the smallest weighted node.
-	int secondSmallestIndex;		// Variable to hold the postion of the next smallest weighted node.
+	int smallestIndex = 0;				// Variable to hold the postion of the smallest weighted node.
+	int secondSmallestIndex = 0;		// Variable to hold the postion of the next smallest weighted node.
+	int iterations = 1;				// Variable to count the amount of times we are iterated through the loop.
 
-	// While the is more than one singular node in the entire array of nodes, keep looping through to find the lowest weight values to create
-	// a subtree
-	// while(the array has more than 1 node) {}
+	// While their is more than 1 node in the array && the first index of the array (arr[0]) is not the root && 
+	while(iterations != 256) {
 	for (int i = 0; i < 256; i++) {
 		// If the weight of the current node is smaller than the current smallest node:   
 		if (arr[i]->weight < smallest) {
@@ -175,21 +162,26 @@ void Huffman::MakeTreeBuilder(string inputFile, string outputFile) {
 			temp = smallestIndex;					
 			smallestIndex = secondSmallestIndex;	// Since secondSmallestIndex < smallestIndex, they need to be swapped.
 			secondSmallestIndex = temp; 
-
 		}
+
 		// Once we have found the two smallest weights in the array of nodes:
 		// 1.) Create an interal node whose weight is the sum of the two smallest weights.
 		// 2.) Internal nodes left child is the smallest index of the two lowest weighted values.
 		// 3.) Internal nodes right child is the next smallest index of the two lowest weighted values. 
-		// 
+
 		node* internalNode = new node;							// Making a new internal node that acts as the parent to the two lowest weighted nodes.
 		internalNode->weight = smallest + secondSmall;			// The weight of the internal node is the sum of the two lowest weighted nodes. 
 		internalNode->left = arr[smallestIndex];				// Need to point the left child of the internal node to.......
 		internalNode->right = arr[secondSmallestIndex];			// Need to point the right child of the internal node to.......
 
+		// After creating the internal node, we need to remove the highest index value from the array of nodes. Since this value has been merged with
+		// the other into a subtree we no longer want it to be in the array. 
+		arr[smallestIndex] = internalNode; 
+		arr[secondSmallestIndex] = NULL; 
 	}
-
-
+	iterations++; 
+ }
+	cout << arr[0]->weight << endl; 
 }
 
 

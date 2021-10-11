@@ -104,18 +104,18 @@ int main(int argc, char* argv[]) {
         else if (argv1 == "-mt" && argv2.substr(0,3) == "-i:") {
             argv2.erase(0, 3);  // Erasing the prefix of the file "-i:"
 
-            int fExtension = argv2.find_last_of(".");
-            if (fExtension == string::npos) {
-                argv2.append(".htree");
-                cout << argv2 << endl;
-            }
-            else if (fExtension != string::npos) {
-                int i = argv2.rfind(".", argv2.length());
-                if (i != string::npos) {
-                    argv2.replace(i, argv2.length(), ".htree");
-                    cout << argv2 << endl;
-                }
-            }
+           // int fExtension = argv2.find_last_of(".");
+           // if (fExtension == string::npos) {
+           //     argv2.append(".htree");
+           //     cout << argv2 << endl;
+           // }
+           // else if (fExtension != string::npos) {
+           //     int i = argv2.rfind(".", argv2.length());
+            //    if (i != string::npos) {
+            //        argv2.replace(i, argv2.length(), ".htree");
+            //        cout << argv2 << endl;
+            //    }
+          //  }
             myHuff->MakeTreeBuilder(argv2, argv2);          //argv2 is going to be the output file since no output file has been specified. 
             exit(1);
         }
