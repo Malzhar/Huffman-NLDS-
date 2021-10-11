@@ -78,29 +78,31 @@ int main(int argc, char* argv[]) {
         // the function that we need to. 
         if (argv1 == "-me" && argv2.substr(0, 3) == "-i:") { 
             argv2.erase(0, 3);                                  // Erasing the prefix "-i:"
-
+            myHuff->EncodeFile(argv2, argv2);
             // Check to see if the argv2 has an extension. If there is an extension, we are going to replace the current
-            // extension and append a .huf to the end of it. If there is no extension, we simply append .huf to the file
-            int fExtension = argv2.find_last_of(".");   
-            if (fExtension == string::npos) {
-                argv2.append(".huf"); 
-            } 
-            else if (fExtension != string::npos) { 
-               int i = argv2.rfind(".", argv2.length());        // Find the location of the start of the extension that we want to replace. 
-                if (i != string::npos) {                        // Variable i just hold the location of the found start of extension
-                    argv2.replace(i, argv2.length(), ".huff");  // Replace the current extension of the file, with the one that we want. 
-                    cout << argv2 << endl;
-                    } 
+            // extension and append a .huf to the end of it. This new text.huf will be the outputFile that the encoded data is stored in.
+            // If there is no extension, we simply append .huf to the file
+           // int fExtension = argv2.find_last_of(".");   
+            //if (fExtension == string::npos) {
+            //    argv2.append(".huf"); 
+            //} 
+            // Making sure that the given file has an extension. 
+            //else if (fExtension != string::npos) { 
+            //   int i = argv2.rfind(".", argv2.length());        // Find the location of the start of the extension that we want to replace. 
+            //    if (i != string::npos) {                        // Variable i just hold the location of the found start of extension
+            //        argv2.replace(i, argv2.length(), ".huff");  // Replace the current extension of the file, with the one that we want. 
+            //        cout << argv2 << endl;
+            //        } 
 
-            }
-            myHuff->EncodeFile(argv2, argv2);                   //argv2 is going to be the output file since no output file has been specified. 
+           // }
+            //myHuff->EncodeFile(argv2, argv2);                   //argv2 is going to be the output file since no output file has been specified. 
         }
         // MODE 4: Case 1:
         // If argc == 3, then the output file has not been specified.
         //  a.) If argv2 has no extension, then we append .htree.
         //  b.) If argv2 has an extension and output file has not been specified, then append remove temp extension and appened .htree to the end of temp to make argv2's name.
         else if (argv1 == "-mt" && argv2.substr(0,3) == "-i:") {
-            argv2.erase(0, 3); 
+            argv2.erase(0, 3);  // Erasing the prefix of the file "-i:"
 
             int fExtension = argv2.find_last_of(".");
             if (fExtension == string::npos) {
@@ -144,7 +146,7 @@ int main(int argc, char* argv[]) {
         }
 
         // MODE 4: Case 2
-        // If argc == 4, then argv3 has been specified. Use the name of the argv3 as given.
+        // If argc == 4, then argv3, aka the outputFile, has been specified. Use the name argv3 as given.
         else if (argv1 == "-mt" && argv2.substr(0, 3) == "-i:" && argv3.substr(0, 3) == "-o:") {
             argv2.erase(0, 3);
             argv3.erase(0, 3); 
@@ -163,7 +165,7 @@ int main(int argc, char* argv[]) {
         if (argv1 == "-met" && argv2.substr(0, 3) == "-i:" && argv3.substr(0, 3) == "-t:") {
             argv2.erase(0, 3);
             argv3.erase(0, 3); 
-            myHuff->EncodeFileWithTree(argv2, argv3, argv2);    
+            myHuff->EncodeFileWithTree(argv2, argv3, argv2);   // argv2 is the inputFile, argv3 is the tree building file, and argv2 will be the outputFile 
             exit(1);
         }
     }
@@ -175,7 +177,14 @@ int main(int argc, char* argv[]) {
         string argv3(argv[3]);
         string argv4(argv[4]);
 
-        // MODE 5: The output file has been specified. 
+        // MODE 5: The output file has been specified.
+        //  1.) argv2 = the inputFile that will be encoded using the 510-byte tree-builder info from argv3. 
+        //  2.) argv3 = the 510-byte tree builder
+        //  3.) argv4 = last 510-bytes will be the tree-builder info from argv3. 
+        // 
+        //  a.) argv4 will default to the same name as argv2, aka inputFile, except it will be appended with ".huf" 
+        //      -If argv2 has an extension, replace it with ".huf" and make that the name of argv4.  
+        //      -If atgv2 has no extension, appended ".huf" to the end of the file and make that the name of argv4
         if (argv1 == "-met" && argv2.substr(0, 3) == "-i:" && argv3.substr(0, 3) == "-t:" && argv4.substr(0, 3) == "-o:") {
             argv2.erase(0, 3);
             argv3.erase(0, 3);
