@@ -8,7 +8,7 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
- 
+
     Huffman* myHuff = new Huffman();
 
     // Mode 1 -- Show Help: Displays the proper usage options to the user and exits
@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
- 
+
 
     // MODE 2: 
     // Encode temp and place the output into argv2. Read temp, build a Huffman tree from temp and place it into argv2. argv2's last 510 bytes will be the
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
 
         // check if -i: is a substring(aka a prefix) of argv2, if it is a prefix to argv2 then we can remove the prefix and pass the file to the 
         // the function that we need to. 
-        if (argv1 == "-me" && argv2.substr(0, 3) == "-i:") { 
+        if (argv1 == "-me" && argv2.substr(0, 3) == "-i:") {
             argv2.erase(0, 3);                                  // Erasing the prefix "-i:"
             myHuff->EncodeFile(argv2, argv2);
             // Check to see if the argv2 has an extension. If there is an extension, we are going to replace the current
@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
         // If argc == 3, then the output file has not been specified.
         //  a.) If argv2 has no extension, then we append .htree.
         //  b.) If argv2 has an extension and output file has not been specified, then append remove temp extension and appened .htree to the end of temp to make argv2's name.
-        else if (argv1 == "-mt" && argv2.substr(0,3) == "-i:") {
+        else if (argv1 == "-mt" && argv2.substr(0, 3) == "-i:") {
             argv2.erase(0, 3);  // Erasing the prefix of the file "-i:"
 
            // int fExtension = argv2.find_last_of(".");
@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
 
     }
 
-    else if (argc == 4) { 
+    else if (argc == 4) {
         string argv1(argv[1]);
         string argv2(argv[2]);
         string argv3(argv[3]);
@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
         //  a.) Use the name of argv2 as specified, even if the user didn't specify an extension.
         if (argv1 == "-me" && argv2.substr(0, 3) == "-i:" && argv3.substr(0, 3) == "-o:") {
             argv2.erase(0, 3);
-            argv3.erase(0, 3); 
+            argv3.erase(0, 3);
             myHuff->EncodeFile(argv2, argv3);       //Output file has been specified, therefore the encoded argv2 will be outputted into argv3
             exit(1);
         }
@@ -140,8 +140,8 @@ int main(int argc, char* argv[]) {
         // MODE 3: 
         if (argv1 == "-md" && argv2.substr(0, 3) == "-i:" && argv3.substr(0, 3) == "-o:") {
             argv2.erase(0, 3);
-            argv3.erase(0, 3); 
-            myHuff->DecodeFile(argv2, argv3); 
+            argv3.erase(0, 3);
+            myHuff->DecodeFile(argv2, argv3);
             exit(1);
         }
 
@@ -149,14 +149,14 @@ int main(int argc, char* argv[]) {
         // If argc == 4, then argv3, aka the outputFile, has been specified. Use the name argv3 as given.
         else if (argv1 == "-mt" && argv2.substr(0, 3) == "-i:" && argv3.substr(0, 3) == "-o:") {
             argv2.erase(0, 3);
-            argv3.erase(0, 3); 
+            argv3.erase(0, 3);
 
             int fExtension = argv2.find_last_of(".");
             if (fExtension == string::npos) {
-                argv2.append(".htree"); 
-                cout << argv2 << endl; 
+                argv2.append(".htree");
+                cout << argv2 << endl;
             }
-            myHuff->MakeTreeBuilder(argv2, argv3);           
+            myHuff->MakeTreeBuilder(argv2, argv3);
             exit(1);
         }
 
@@ -164,7 +164,7 @@ int main(int argc, char* argv[]) {
         // MODE 5: No output file specified. 
         if (argv1 == "-met" && argv2.substr(0, 3) == "-i:" && argv3.substr(0, 3) == "-t:") {
             argv2.erase(0, 3);
-            argv3.erase(0, 3); 
+            argv3.erase(0, 3);
             myHuff->EncodeFileWithTree(argv2, argv3, argv2);   // argv2 is the inputFile, argv3 is the tree building file, and argv2 will be the outputFile 
             exit(1);
         }
@@ -188,10 +188,10 @@ int main(int argc, char* argv[]) {
         if (argv1 == "-met" && argv2.substr(0, 3) == "-i:" && argv3.substr(0, 3) == "-t:" && argv4.substr(0, 3) == "-o:") {
             argv2.erase(0, 3);
             argv3.erase(0, 3);
-            argv4.erase(0, 4); 
+            argv4.erase(0, 4);
 
-            myHuff->EncodeFileWithTree(argv2, argv3, argv4); 
-            exit(1); 
+            myHuff->EncodeFileWithTree(argv2, argv3, argv4);
+            exit(1);
         }
     }
 
