@@ -51,21 +51,21 @@ int main(int argc, char* argv[]) {
 
         if (argv1 == "-me" && argv2.substr(0, 3) == "-i:") {    // check if "-i:" is a substring of argv2
             argv2.erase(0, 3);                                  // Erasing the prefix "-i:"
-
+            outputFile = argv2; 
 // Check to see if the argv2 (file) has an extension:
 //  1. If there is an extension, remove current extension and append ".huf" to the end of it.
 //  2. If there is no extension, append ".huf" to the end of it.   
         
-            int fExtension = argv2.find_last_of(".");           // Checking to see if the file has an extension
+            int fExtension = outputFile.find_last_of(".");           // Checking to see if the file has an extension
             if (fExtension == string::npos) {                   // If there is no ".", then there is no extension,
-                argv2.append(".huf");                           // append ".huf" to the end of the file. 
-                outputFile = argv2;                             // outputFile is input file name with ".huf" appended to it. 
+                outputFile.append(".huf");                           // append ".huf" to the end of the file. 
+ 
             }  
             else if (fExtension != string::npos) { 
-               int i = argv2.rfind(".", argv2.length());        // Find the location of the start of the extension that we want to replace. 
+               int i = outputFile.rfind(".", outputFile.length());        // Find the location of the start of the extension that we want to replace. 
                if (i != string::npos) {                         // Variable i just hold the location of the found start of extension
-                   argv2.replace(i, argv2.length(), ".huf");    // Replace the current extension of the file, with the one that we want. 
-                   outputFile = argv2;                          // outputFile is input file name with ".huf" appended to it.
+                   outputFile.replace(i, outputFile.length(), ".huf");    // Replace the current extension of the file, with the one that we want. 
+
                }
             }
 
@@ -75,21 +75,23 @@ int main(int argc, char* argv[]) {
 
         else if (argv1 == "-mt" && argv2.substr(0, 3) == "-i:") {
             argv2.erase(0, 3);                                      // Erasing the prefix of the file "-i:"
+            outputFile = argv2; 
 
 // Check to see if the argv2 (file) has an extension:
 //  1. If there is an extension, remove current extension and append ".htree" to the end of it.
 //  2. If there is no extension, append ".htree" to the end of it.
 
-            int fExtension = argv2.find_last_of(".");
+            int fExtension = outputFile.find_last_of(".");
+
             if (fExtension == string::npos) {
-                argv2.append(".htree");
-                outputFile = argv2;                                  // outputFile is input file name with ".htree" appended to it.
+                outputFile.append(".htree");
             }
+
             else if (fExtension != string::npos) {
-                int i = argv2.rfind(".", argv2.length());
+                int i = outputFile.rfind(".", outputFile.length());
+
                 if (i != string::npos) {
-                    argv2.replace(i, argv2.length(), ".htree");
-                    outputFile = argv2;                              // outputFile is input file name with ".htree" appended to it. 
+                    outputFile.replace(i, outputFile.length(), ".htree"); 
                 }
             }
             myHuff->MakeTreeBuilder(argv2, outputFile);              //argv2 is going to be the output file since no output file has been specified. 
@@ -148,10 +150,10 @@ int main(int argc, char* argv[]) {
             argv2.erase(0, 3);
             argv3.erase(0, 3);
 
-            int fExtension = argv2.find_last_of(".");
+            outputFile = argv2; 
+            int fExtension = outputFile.find_last_of(".");
             if (fExtension == string::npos) {
-                argv2.append(".huf");
-                outputFile = argv2; 
+                outputFile.append(".huf"); 
             }
             myHuff->EncodeFileWithTree(argv2, argv3, outputFile);   
             exit(1);

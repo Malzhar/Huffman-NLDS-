@@ -169,7 +169,7 @@ void Huffman::MakeTreeBuilder(string inputFile, string outputFile) {
 // 			iii. Once internal node is created and set appropriately, point the min2 node point to NULL. 
 // 
 //
-	cout << outputFile << endl; 
+	 
 	ifstream in;
 	in.open(inputFile, ios::binary);
 	if (!in.good()) {
@@ -256,11 +256,25 @@ void Huffman::MakeTreeBuilder(string inputFile, string outputFile) {
 			arr[secondSmallestIndex] = NULL;						// Make SECOND SMALLEST index NULL.
 			iterations++;											// incrementing the iterations. 
 	}
-	//for (int i = 0; i < 256; i++) {
-	//	cout << arr_i[i] << endl; 
-	//}
+
 	 node* root = arr[0];
 	 inorderTraversal(root);
+
+	 ofstream out;
+	 out.open(outputFile, ios::binary);
+
+	 if (!out.good()) {
+		 printf("File not found\n");
+		 exit(1);
+	 }
+// While the integer array still has values in it, getting writing to the file, once the end of the array is reached. Stop writing and exit
+// close the file. 
+
+	 for (int i = 0; i < 256; i++) {
+		 out.put(arr_i[i]); 
+	}
+	 
+	 out.close();
 
 	// for (int i = 0; i < 256; i++) {								
 	//	 cout << i << " " << arr_s[i] << endl;
