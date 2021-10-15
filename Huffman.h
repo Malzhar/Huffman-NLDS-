@@ -9,19 +9,20 @@ class Huffman {
 
 public:
 
+	Huffman();
+	~Huffman(); 
 	void MakeTreeBuilder(string inputFile, string outputFile);
 	void EncodeFile(string inputFile, string outputFile);
 	void DecodeFile(string inputFile, string outputFile);
 	void EncodeFileWithTree(string inputFile, string TreeFile, string outputFile);
 	void displayHelp();
 
-
-
-
 private:
 
-	//Creating a node in a binary tree. every node has a left and right child
-	//a character value(i.e. the symbol) and a weight(i.e. the amount of times that the character as appeared in the text)
+//Creating a node in a binary tree:
+// a. Every node has a left and right child.
+// b. Every node has a symbol, i.e. character value
+// c. Every node has a weight, i.e. frequency of char occurences. 
 	struct node {
 		char symbol;
 		int weight;
@@ -29,6 +30,10 @@ private:
 		node* right;
 	};
 
-	//creating an array of 256 nodes: each node has a left and right child, a weight and a symbol. 
 	node* arr[256];
+	node* root = arr[0]; 
+	string path;					// Variable that is going to hold the bit string. 
+	string arr_s[256]; 
+	int arr_i[512]; 
+	void inorderTraversal(node* p); 
 };
