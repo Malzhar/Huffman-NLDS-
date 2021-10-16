@@ -42,7 +42,9 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 //	5. Traverse the Huffman Tree to create/store the variable length bit strings in a string array.
 //	6. Then we need to write those variable length bits strings to an output file.  
 //
-	ifstream in;												// how we can get input from a file, "in" is the name we have chosen to use. 
+	 
+	ifstream in;	
+	ofstream out;  
 	in.open(inputFile, ios::binary);							// opening the given input file
 
 	if (!in.good()) {											// checking the input file for validity. If the file is not valid 
@@ -120,9 +122,53 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 	}
 	node* root = arr[0];
 	inorderTraversal(root);
-	for (int i = 0; i < 256; i++) {
-		cout << i << " " << arr_s[i] << endl;
+// At this point we have an array of 256 bit strings. 
+
+	in.open(inputFile, ios::binary);
+	out.open(outputFile, ios::binary); 
+	string buffer;
+
+	if (!in.good()) {											 
+		printf("File not found\n");								 
+		exit(1);
 	}
+
+	if (!out.good()) {											// Checking that output 
+		printf("File not found\n");
+		exit(1); 
+	}
+
+	in.get(symbol); 
+	while (!in.eof()) {					
+		in.get(symbol);											// Get the next symbol 
+		buffer.append(arr_s[symbol]);							// Append the bitstring to the buffer
+		// Use bitwise operations to convert this 8-bit substring to a char. 
+		while(buffer.length() > 7) {
+			unsigned char b = 0;  
+		  if (buffer[0] == '1') b |= (1 << 7);
+		  if (buffer[1] == '1') b |= (1 << 6); 
+		  if (buffer[2] == '1') b |= (1 << 5); 
+		  if (buffer[3] == '1') b |= (1 << 4);
+		  if (buffer[4] == '1') b |= (1 << 3);
+		  if (buffer[5] == '1') b |= (1 << 2);
+		  if (buffer[6] == '1') b |= (1 << 1);
+		  if (buffer[7] == '1') b |= (1 << 0);
+		 out.put(b);
+		 buffer.erase(0, 8);									// Erasing the 8-bits 
+		 }
+	}
+
+	// check for padding after the while as been exited. 
+	if (buffer.length() > 0) {
+		for (int i = 0; i < 256; i++) {					// Loop through entire bitstring array
+			if (7 < arr_s[i].length())	// if length of buffer is less than max bit string size
+				buffer.append(arr_s[i]);				// 
+		}
+	}
+	in.close();													// Close the input file.
+	out.close();												// Close the output file.
+
+
 }
 	
 
@@ -197,52 +243,48 @@ void Huffman::MakeTreeBuilder(string inputFile, string outputFile) {
 	int smallestIndex = 0;							// Variable to hold the postion of the smallest weighted node.
 	int secondSmallestIndex = 0;					// Variable to hold the postion of the next smallest weighted node.
 	int iterations = 0;								// Variable to count the amount of times we are iterated through the loop.
+	int iterations2 = 0; 
 
 	while (iterations < 255) {
+
 		int smallest = INT_MAX;						// Variable to hold the weight value of the smallest weighted node.
 		int secondSmall = INT_MAX;					// Variable to hold the weight value of the next smallest weighted node. 
 
-		for (int i = 0; i < 256; i++) {				// Checking for the SMALLEST weight in the node array. 
-
+		for (int i = 0; i < 256; i++) {				// Checking for the SMALLEST weight in the node array.
 			if (arr[i] == NULL) {					// If he index we are at is NULL, then skip this index and go to the next one.
 				continue;
 			}
-
 			if (arr[i]->weight < smallest) {		// If the weight of the current node is smaller than the current smallest node:
 				smallest = arr[i]->weight;			// Make the smallest weight be equal to the current node's weight.
-				smallestIndex = i; 	 				// Save the current position of the node to be used to assign the internal nodes left child.
-				arr_i[i] = smallestIndex;			// Storing the min1 index into an integer array for the tree building information. 
-			} 
-		}	
+				smallestIndex = i; 	 				// Save the current position of the node to be used to assign the internal nodes left child.										  	
+			}
+		}
 
 		for (int i = 0; i < 256; i++) {				// Checking for the SECOND SMALLEST weight in the node array. 
-
 			if (i == smallestIndex) {
-				continue; 
+				continue;
 			}
-
 			if (arr[i] == NULL) {					// If he index we are at is NULL, then skip this index and go to the next one.
 				continue;
 			}
-	
 			if (arr[i]->weight < secondSmall) {		// If the weight of the current node is less than the secondSmall:
-				secondSmall = arr[i]->weight;		// Make the second smallest weight equal to the current node.  
-				secondSmallestIndex = i;			// Save the current position of the node to be used to assign the internal nodes right child. 
-				arr_i[i] = secondSmallestIndex;		// Storing the min2 index into an integer array for the tree building information. 
-			} 	 
+				secondSmall = arr[i]->weight;		// Make the second smallest weight equal to the current node. 
+				secondSmallestIndex = i;			// Save the current position of the node to be used to assign the internal nodes right child.
+			}
 		}
- 
-
 		if (smallestIndex > secondSmallestIndex) {	// Checking that the SMALLEST index is the actual SMALLEST index
 			int temp;								// Variable to hold one of the index's, so that a swap can be made.
 			temp = smallestIndex;
 			smallestIndex = secondSmallestIndex;	// Since secondSmallestIndex < smallestIndex, they need to be swapped.
 			secondSmallestIndex = temp;
-		}
+		} 
 
-		// cout << arr_i[smallestIndex] << arr_i[secondSmallestIndex] << endl;
- 
+		//NEED TO SET THE INDICIES AFTER THIS POINT!!!
 		
+		arr_i[iterations2] = smallestIndex;
+		arr_i[iterations2 + 1] = secondSmallestIndex;
+	
+
 // Once we have found the two smallest weights in the array of nodes:
 //	1. Create an interal node whose weight is the sum of the two smallest weights.
 //	2. Internal nodes left child is the smallest index of the two lowest weighted values.
@@ -255,30 +297,20 @@ void Huffman::MakeTreeBuilder(string inputFile, string outputFile) {
 			arr[smallestIndex] = internalNode;						// Connect internal node to the SMALLEST index.
 			arr[secondSmallestIndex] = NULL;						// Make SECOND SMALLEST index NULL.
 			iterations++;											// incrementing the iterations. 
+			iterations2 += 2; 
 	}
 
-	 node* root = arr[0];
-	 inorderTraversal(root);
-
-	 ofstream out;
-	 out.open(outputFile, ios::binary);
-
-	 if (!out.good()) {
-		 printf("File not found\n");
-		 exit(1);
-	 }
-// While the integer array still has values in it, getting writing to the file, once the end of the array is reached. Stop writing and exit
-// close the file. 
-
-	 for (int i = 0; i < 256; i++) {
-		 out.put(arr_i[i]); 
+	ofstream out;
+	out.open(outputFile, ios::binary);
+	if (!out.good()) {
+		printf("File not found\n");
+		exit(1);
 	}
-	 
-	 out.close();
 
-	// for (int i = 0; i < 256; i++) {								
-	//	 cout << i << " " << arr_s[i] << endl;
-	// }
+	for (int i = 0; i < 510; i++) {
+		out.put((unsigned char)arr_i[i]);
+	}
+	out.close();
 }
 
 void Huffman::inorderTraversal(node* p) {					 
@@ -307,8 +339,3 @@ void Huffman::inorderTraversal(node* p) {
 		path.pop_back();									// erase last previously appended char
 	}
 }
- 
-// BRAINSTORMING SECTION: 
-//	1. Need to rememeber about padding the bit strings:
-//		Between 1 - 7 padding bits for an 8-bit byte
-//
