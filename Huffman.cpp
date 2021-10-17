@@ -4,7 +4,7 @@
 #include <iomanip>
 
 Huffman::Huffman() {
-	root = arr[0]; 
+	root = NULL; 
 }
 
 Huffman::~Huffman() {
@@ -46,7 +46,6 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 	ifstream in;	
 	ofstream out;  
 	in.open(inputFile, ios::binary);							// opening the given input file
-
 	if (!in.good()) {											// checking the input file for validity. If the file is not valid 
 		printf("File not found\n");								// output an error message and then exit. 
 		exit(1);
@@ -60,9 +59,9 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 		arr[i]->left = NULL;									// each node's left and right child is initialized to NULL since they arent connected to anything yet. 
 		arr[i]->right = NULL;
 	}
-	in.get(symbol);												// need to get the next char.  
 
-	while (!in.eof()) {
+	in.get(symbol); 
+	while (!in.eof()) {  
 		arr[(unsigned char)symbol]->weight++;					// Go to the next char and increment the weight.
 		in.get(symbol);
 	}
@@ -73,6 +72,7 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 	int smallestIndex = 0;										// Variable to hold the postion of the smallest weighted node.
 	int secondSmallestIndex = 0;								// Variable to hold the postion of the next smallest weighted node.
 	int iterations = 0;											// Variable to count the amount of times we are iterated through the loop.
+	int iterations2 = 0; 
 
 	while (iterations < 255) {
 		int smallest = INT_MAX;									// Variable to hold the weight value of the smallest weighted node.
@@ -107,6 +107,10 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 			smallestIndex = secondSmallestIndex;				// Since secondSmallestIndex < smallestIndex, they need to be swapped.
 			secondSmallestIndex = temp;
 		}
+
+		arr_i[iterations2] = smallestIndex;
+		arr_i[iterations2 + 1] = secondSmallestIndex;
+
 // Once we have found the two smallest weights in the array of nodes:
 //	1. Create an interal node whose weight is the sum of the two smallest weights.
 //	2. Internal nodes left child is the smallest index of the two lowest weighted values.
@@ -119,56 +123,77 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 		arr[smallestIndex] = internalNode;						// Connect the internal node to the lowest index in node array. 
 		arr[secondSmallestIndex] = NULL;						// Make second highest index point to NULL
 		iterations++;											// increment the iterations. 
+		iterations2 += 2; 
+	}
+	for (int i = 0; i < 510; i++) {
+		cout << arr_i[i] << " "; 
 	}
 	node* root = arr[0];
-	inorderTraversal(root);
-// At this point we have an array of 256 bit strings. 
-
+	inorderTraversal(root);										// Traverse Tree to get sequences. 
+ 
 	in.open(inputFile, ios::binary);
-	out.open(outputFile, ios::binary); 
-	string buffer;
-
-	if (!in.good()) {											 
+	if (!in.good()) {	
 		printf("File not found\n");								 
 		exit(1);
 	}
-
+	out.open(outputFile, ios::binary);
 	if (!out.good()) {											// Checking that output 
 		printf("File not found\n");
 		exit(1); 
 	}
 
-	in.get(symbol); 
-	while (!in.eof()) {					
+	string buffer = "";
+	while (!in.eof()) {	
+
 		in.get(symbol);											// Get the next symbol 
 		buffer.append(arr_s[symbol]);							// Append the bitstring to the buffer
-		// Use bitwise operations to convert this 8-bit substring to a char. 
-		while(buffer.length() > 7) {
-			unsigned char b = 0;  
-		  if (buffer[0] == '1') b |= (1 << 7);
-		  if (buffer[1] == '1') b |= (1 << 6); 
-		  if (buffer[2] == '1') b |= (1 << 5); 
-		  if (buffer[3] == '1') b |= (1 << 4);
-		  if (buffer[4] == '1') b |= (1 << 3);
-		  if (buffer[5] == '1') b |= (1 << 2);
-		  if (buffer[6] == '1') b |= (1 << 1);
-		  if (buffer[7] == '1') b |= (1 << 0);
-		 out.put(b);
+
+		while(buffer.length() > 7) {							 
+		unsigned char b = 0;  
+
+		  if (buffer[0] == '1') b |= (1 << 7);					// 128
+		  if (buffer[1] == '1') b |= (1 << 6);					// 64
+		  if (buffer[2] == '1') b |= (1 << 5);					// 32
+		  if (buffer[3] == '1') b |= (1 << 4);					// 16
+		  if (buffer[4] == '1') b |= (1 << 3);					// 8
+		  if (buffer[5] == '1') b |= (1 << 2);					// 4 
+		  if (buffer[6] == '1') b |= (1 << 1);					// 2
+		  if (buffer[7] == '1') b |= (1 << 0);					// 1
+
+		 out.put(b);											// Write the char to the file. 
 		 buffer.erase(0, 8);									// Erasing the 8-bits 
-		 }
+		}
 	}
 
-	// check for padding after the while as been exited. 
-	if (buffer.length() > 0) {
-		for (int i = 0; i < 256; i++) {					// Loop through entire bitstring array
-			if (7 < arr_s[i].length())	// if length of buffer is less than max bit string size
-				buffer.append(arr_s[i]);				// 
+	if (buffer.length() > 0) {									// Buffer still have bits in it after end of file is reached. 
+		for (int i = 0; i < 256; i++) {							// Loop through entire bitstring array
+			if (7 < arr_s[i].length()) {						// if bit string is greater than 7
+				buffer.append(arr_s[i]);						// append to end of the buffer.
+
+				unsigned char b = 0;
+				if (buffer[0] == '1') b |= (1 << 7);					// 128
+				if (buffer[1] == '1') b |= (1 << 6);					// 64
+				if (buffer[2] == '1') b |= (1 << 5);					// 32
+				if (buffer[3] == '1') b |= (1 << 4);					// 16
+				if (buffer[4] == '1') b |= (1 << 3);					// 8
+				if (buffer[5] == '1') b |= (1 << 2);					// 4 
+				if (buffer[6] == '1') b |= (1 << 1);					// 2
+				if (buffer[7] == '1') b |= (1 << 0);					// 1
+				out.put(b); 
+				buffer.erase(0, buffer.length()); 
+				break; 
+			}
 		}
 	}
 	in.close();													// Close the input file.
+
+	int counter = 0; 
+	while(counter < 510) {
+		out.put((unsigned char)arr_i[counter]);					// Write Tree-building info to end of output file. 
+		counter++; 
+	}
+
 	out.close();												// Close the output file.
-
-
 }
 	
 
@@ -178,13 +203,173 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 //	
 //
 
-	ifstream in;
+	ifstream in; 
 	in.open(inputFile, ios::binary);
-
 	if (!in.good()) {
 		printf("File not found\n");
 		exit(1);
 	}
+
+
+	char symbol; 
+	for (int i = 0; i < 256; i++) {
+		arr[i] = new node;										// creating 256 nodes, i.e. arr[0]...arr[255] are a new node
+		arr[i]->weight = 0;										// initializing the weight(count) of each new node to 0.
+		arr[i]->symbol = i;										// intializing the symbol to represent 1 ASCII symbol where i represents the ascii value of the character in decimal. 
+		arr[i]->left = NULL;									// each node's left and right child is initialized to NULL since they arent connected to anything yet. 
+		arr[i]->right = NULL;
+	}
+
+	in.seekg(-510, ios::end);									// Only reading the last 510 bytes in the file.
+	unsigned char b;
+  
+	for (int i = 0; i < 510; i++) {	  
+		b = in.get();
+		decodeArray[i] = (unsigned int) b;						// Getting the sequences for tree building. 
+	}
+	in.close();													// Close the input file. 
+
+//Build the Huffman Tree:
+	int iterations = 0; 
+	int counter = 0; 
+	while (iterations < 255) {
+		node* decodeNode = new node; 
+		decodeNode->left = arr[decodeArray[counter]];			// left child is the min1 index.
+		decodeNode->right = arr[decodeArray[counter + 1]];		// right child is the min2 index.
+		arr[decodeArray[counter]] = decodeNode;					// moving the nodes into the min1 node.
+		arr[decodeArray[counter + 1]] = NULL;					// setting the min2 index to null. 
+		counter+=2; 
+		iterations++; 
+	}
+	root = arr[0]; 
+
+	ifstream inin; 
+	inin.open(inputFile, ios::binary);							// Re-open at the begining of the input file. 
+	if (!inin.good()) {
+		printf("File not found\n");
+		exit(1);
+	} 
+	inin.seekg(0, ios::end); 
+	int length = inin.tellg();
+	length = length - 510; 
+
+	ofstream out1; 
+	out1.open(outputFile, ios::binary); 
+	if (!out1.good()) {
+		printf("File not found\n");
+		exit(1);
+	}
+	unsigned char bit;
+	while (length > 0) {											// While end of file is greater than zero
+
+	node* p = root;
+	bit = inin.get();												// Get the next symbol in the encoded file. 
+
+// If buffer[0] = 1, go right, else go left.
+// (bit & 0x80) ? p->right : p->left;
+
+		if (bit & 0x80) {
+			p = p->right;
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }		 	
+		}
+		else {
+			p = p->left;
+				if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+		}
+// If buffer[1] = 1 go right, else go left. 
+// (bit & 0x40) ? p->right : p->left;
+
+
+		if (bit & 0x40) {
+			p = p->right;
+				if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+		}
+		else {
+			p = p->left;
+				if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+		}
+
+// If buffer[2] = 1 go right, else go left. 
+// (bit & 0x20) ? p->right : p->left;
+
+
+		if (bit & 0x20) {
+			p = p->right;
+				if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+		}
+		else {
+			p = p->left;
+				if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+		}
+
+// If buffer[3] = 1 go right, else go left.
+// (bit & 0x10) ? p->right : p->left;
+
+
+		if (bit & 0x10) {
+			p = p->right;
+				if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+		}
+		else {
+			p = p->left;
+				if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+		}
+
+// If buffer[4] = 1 go right, else go left.
+// (bit & 0x08) ? p->right : p->left;
+
+		if (bit & 0x08) {
+			p = p->right;
+				if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+		}
+		else {
+			p = p->left;
+				if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+		}
+
+// If buffer[5] = 1 go right, else go left. 
+// (bit & 0x04) ? p->right : p->left;
+
+		if (bit & 0x04) {
+			p = p->right;
+				if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+
+		}
+
+		else {
+			p = p->left;
+				if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+		}
+
+// If buffer[6] = 1 go right, else go left.
+// (bit & 0x02) ? p->right : p->left;
+
+		if (bit & 0x02) {
+			p = p->right;
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+		}
+		else {
+			p = p->left;
+				if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+		}
+
+// If buffer[7] = 1 go right, else go left.
+// (bit & 0x01) ? p->right : p->left;
+
+
+		if (bit & 0x01) {
+			p = p->right;
+				if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+		}
+		else {
+			p = p->left;
+				if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+		}
+
+		length--; 
+	}
+	inin.close();
+	out1.close(); 
 }
 
 void Huffman::EncodeFileWithTree(string inputFile, string TreeFile, string outputFile) {
@@ -279,8 +464,6 @@ void Huffman::MakeTreeBuilder(string inputFile, string outputFile) {
 			secondSmallestIndex = temp;
 		} 
 
-		//NEED TO SET THE INDICIES AFTER THIS POINT!!!
-		
 		arr_i[iterations2] = smallestIndex;
 		arr_i[iterations2 + 1] = secondSmallestIndex;
 	
@@ -297,7 +480,7 @@ void Huffman::MakeTreeBuilder(string inputFile, string outputFile) {
 			arr[smallestIndex] = internalNode;						// Connect internal node to the SMALLEST index.
 			arr[secondSmallestIndex] = NULL;						// Make SECOND SMALLEST index NULL.
 			iterations++;											// incrementing the iterations. 
-			iterations2 += 2; 
+			iterations2+=2; 
 	}
 
 	ofstream out;
@@ -308,9 +491,10 @@ void Huffman::MakeTreeBuilder(string inputFile, string outputFile) {
 	}
 
 	for (int i = 0; i < 510; i++) {
-		out.put((unsigned char)arr_i[i]);
+		out.put((unsigned char)arr_i[i]);			// Writing tree-building info to the file. 
 	}
-	out.close();
+
+	out.close();									// Closing the output file. 
 }
 
 void Huffman::inorderTraversal(node* p) {					 

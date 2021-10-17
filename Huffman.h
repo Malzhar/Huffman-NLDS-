@@ -32,8 +32,9 @@ private:
 
 	node* arr[256];
 	node* root = arr[0]; 
-	string path;					// Variable that is going to hold the bit string. 
+	string path;					 
 	string arr_s[256];  
 	int arr_i[510]; 
+	int decodeArray[510]; 
 	void inorderTraversal(node* p); 
 };
