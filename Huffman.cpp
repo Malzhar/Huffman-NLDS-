@@ -2,9 +2,10 @@
 #include <iostream>
 #include <fstream> 
 #include <iomanip>
+#include <ctime> 
 
 Huffman::Huffman() {
-	//root = NULL;
+	root = NULL;
 }
 
 Huffman::~Huffman() {
@@ -45,6 +46,8 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 
 	ifstream in;
 	ofstream out;
+	double begin = clock();										// Begin Timer for program. 
+
 	in.open(inputFile, ios::binary);							// opening the given input file
 	if (!in.good()) {											// checking the input file for validity. If the file is not valid 
 		printf("File not found\n");								// output an error message and then exit. 
@@ -60,10 +63,13 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 		arr[i]->right = NULL;
 	}
 
+	int totalBytesIn = 0;										// Counter to count the total number of bytes going into file. 
+
 	in.get(symbol);
 	while (!in.eof()) {
 		arr[(unsigned char)symbol]->weight++;					// Go to the next char and increment the weight.
 		in.get(symbol);
+		totalBytesIn++; 
 	}
 	in.close();													// Close the file. 
 
@@ -141,8 +147,11 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 	}
 
 	string buffer = "";
+	int totalBytesOut = 0; 
+
 	while (!in.eof()) {
 
+		totalBytesOut++;										// Counter to count the number of bits going out
 		in.get(symbol);											// Get the next symbol 
 		buffer.append(arr_s[symbol]);							// Append the bitstring to the buffer
 
@@ -192,16 +201,27 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 		treeCounter++;
 	}
 	out.close();												// Close the output file.
+	double endtime = clock(); 
+	double result = (endtime - begin) / CLOCKS_PER_SEC;
+	cout << "Time: " << result << " seconds. " << totalBytesIn << " bytes in / " << totalBytesOut << " bytes out." << endl;
+	
 }
 
 
 
 void Huffman::DecodeFile(string inputFile, string outputFile) {
 	// To decode a file:
-	//	
-	//
+	//	1. Build the array of nodes that will become the tree.
+	//  2. Read the last 510-bytes of the encoded file since that is what holds the huffman tree building information
+	//  3. then using the huffman tree that is built, re-open the file from the beginning and compare byte by byte.
+	//		a. If 0, go left.
+	//		b. If 1, go right.
+	//		c. two statements above are completed down below with the long sequence of if statements. 
+	//  4. Output the decoded chars and make sure that it is byte identical to the encoded file. 
 
 	ifstream in;
+	double begin = clock();										// Begin Timer for program. 
+
 	in.open(inputFile, ios::binary);
 	if (!in.good()) {
 		printf("File not found\n");
@@ -221,12 +241,12 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 	in.seekg(-510, ios::end);									// Only reading the last 510 bytes in the file.
 	unsigned char b;
 
+	int totalBytesIn = 0; 
 	for (int i = 0; i < 510; i++) {
 		b = in.get();
 		decodeArray[i] = (unsigned int)b;						// Getting the sequences for tree building. 
 	}
 
-	
 	in.close();													// Close the input file. 
 
 //Build the Huffman Tree:
@@ -245,7 +265,7 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 		iterations++;
 	}
 
-	root = arr[0];
+	root = arr[0];												// Setting the root to be equal to first index in array
 
 	ifstream inin;
 	inin.open(inputFile, ios::binary);							// Re-open at the begining of the input file. 
@@ -253,35 +273,38 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 		printf("File not found\n");
 		exit(1);
 	}
+
 	inin.seekg(0, ios::end);
 	int length = inin.tellg();
-	length = length - 511;
+	length = length - 511;										// Make sure to read everything but the last 510-bytes of the file since the last 510-bytes are the tree building information. 
 
 	inin.seekg(0, ios::beg); 
 
 	ofstream out1;
-	out1.open(outputFile, ios::binary);
+	out1.open(outputFile, ios::binary);							// Make sure that the output file can be opened. 
 	if (!out1.good()) {
 		printf("File not found\n");
 		exit(1);
 	}
+
 	unsigned char bit;
 	node* p = root;
 
-	while (length > 0) {												
+	int totalBytesOut = 0; 
+	while (length > 0) {																					
 
-		bit = inin.get();												// Get the next symbol in the encoded file. 
+		bit = inin.get();										// Get the next symbol in the encoded file. 
 
 	// If buffer[0] = 1, go right, else go left.
 	// (bit & 0x80) ? p->right : p->left;
 
 		if (bit & 0x80) {
 			p = p->right;
-			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
 		else {
 			p = p->left;
-			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
 		// If buffer[1] = 1 go right, else go left. 
 		// (bit & 0x40) ? p->right : p->left;
@@ -289,11 +312,11 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 
 		if (bit & 0x40) {
 			p = p->right;
-			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
 		else {
 			p = p->left;
-			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
 
 		// If buffer[2] = 1 go right, else go left. 
@@ -302,11 +325,11 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 
 		if (bit & 0x20) {
 			p = p->right;
-			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
 		else {
 			p = p->left;
-			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
 
 		// If buffer[3] = 1 go right, else go left.
@@ -315,11 +338,11 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 
 		if (bit & 0x10) {
 			p = p->right;
-			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
 		else {
 			p = p->left;
-			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
 
 		// If buffer[4] = 1 go right, else go left.
@@ -327,11 +350,11 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 
 		if (bit & 0x08) {
 			p = p->right;
-			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
 		else {
 			p = p->left;
-			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
 
 		// If buffer[5] = 1 go right, else go left. 
@@ -339,13 +362,13 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 
 		if (bit & 0x04) {
 			p = p->right;
-			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 
 		}
 
 		else {
 			p = p->left;
-			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
 
 		// If buffer[6] = 1 go right, else go left.
@@ -353,11 +376,11 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 
 		if (bit & 0x02) {
 			p = p->right;
-			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
 		else {
 			p = p->left;
-			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
 
 		// If buffer[7] = 1 go right, else go left.
@@ -365,17 +388,20 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 
 		if (bit & 0x01) {
 			p = p->right;
-			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
 		else {
 			p = p->left;
-			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); p = root; }
+			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
-
 		length--;
 	}
 	inin.close();
 	out1.close();
+
+	double endtime = clock();
+	double result = (endtime - begin) / CLOCKS_PER_SEC;
+	cout << "Time: " << result << " seconds. " << totalBytesIn << " bytes in / " << totalBytesOut << " bytes out." << endl;
 }
 
 void Huffman::EncodeFileWithTree(string inputFile, string TreeFile, string outputFile) {
@@ -388,6 +414,7 @@ void Huffman::EncodeFileWithTree(string inputFile, string TreeFile, string outpu
 	// 510-bytes are a sequence of index's, if first 2 indices are 9 & 11, combined nodes at 9 and 11. 
 
 	ifstream inTree;
+	double begin = clock();										// Begin Timer for program. 
 	inTree.open(TreeFile, ios::binary);
 
 	char symbol;
@@ -405,6 +432,7 @@ void Huffman::EncodeFileWithTree(string inputFile, string TreeFile, string outpu
 	inTree.seekg(0, ios::beg);									// Only reading the last 510 bytes in the file.
 	unsigned char b;
 
+	int totalBytesIn = 0; 
 	for (int i = 0; i < 510; i++) {
 		b = inTree.get();
 		decodeArray[i] = (unsigned int)b;							// Getting the sequences for tree building. 
@@ -446,6 +474,7 @@ void Huffman::EncodeFileWithTree(string inputFile, string TreeFile, string outpu
 	}
 
 	string buffer = "";
+	int totalBytesOut = 0; 
 	while (!in.eof()) {
 
 		in.get(symbol);											// Get the next symbol 
@@ -464,6 +493,7 @@ void Huffman::EncodeFileWithTree(string inputFile, string TreeFile, string outpu
 			if (buffer[7] == '1') b |= (1 << 0);					// 1
 
 			out.put(b);											// Write the char to the file. 
+			totalBytesOut++;
 			buffer.erase(0, 8);									// Erasing the 8-bits 
 		}
 	}
@@ -482,11 +512,12 @@ void Huffman::EncodeFileWithTree(string inputFile, string TreeFile, string outpu
 				if (buffer[5] == '1') b |= (1 << 2);
 				if (buffer[6] == '1') b |= (1 << 1);
 				if (buffer[7] == '1') b |= (1 << 0);
-				out.put(b);
+				out.put(b); 
 				buffer.erase(0, buffer.length());
 				break;
 			}
 		}
+		totalBytesOut++; 
 	}
 
 	in.close();													// Close the input file.
@@ -498,6 +529,9 @@ void Huffman::EncodeFileWithTree(string inputFile, string TreeFile, string outpu
 	}
 
 	out.close();												// Close the output file.
+	double endtime = clock();
+	double result = (endtime - begin) / CLOCKS_PER_SEC;
+	cout << "Time: " << result << " seconds. " << totalBytesIn << " bytes in / " << totalBytesOut << " bytes out." << endl;
 }
 
 void Huffman::MakeTreeBuilder(string inputFile, string outputFile) {
@@ -515,6 +549,7 @@ void Huffman::MakeTreeBuilder(string inputFile, string outputFile) {
 	//
 
 	ifstream in;
+	double begin = clock();										// Begin Timer for program. 
 	in.open(inputFile, ios::binary);
 	if (!in.good()) {
 		printf("File not found\n");
@@ -531,9 +566,11 @@ void Huffman::MakeTreeBuilder(string inputFile, string outputFile) {
 	}
 	in.get(symbol);									// need to get the next symbol.
 
+	int totalBytesIn = 0;
 	while (!in.eof()) {
 		arr[(unsigned char)symbol]->weight++;		// Go to the next char and increment the weight of the ascii value node
 		in.get(symbol);
+		totalBytesIn++;
 	}
 	in.close();										// Close the file.   
 
@@ -603,11 +640,16 @@ void Huffman::MakeTreeBuilder(string inputFile, string outputFile) {
 		exit(1);
 	}
 
+	int totalBytesOut = 0; 
 	for (int i = 0; i < 510; i++) {
 		out.put((unsigned char)arr_i[i]);			// Writing tree-building info to the file. 
+		totalBytesOut++;
 	}
 
 	out.close();									// Closing the output file. 
+	double endtime = clock();
+	double result = (endtime - begin) / CLOCKS_PER_SEC;
+	cout << "Time: " << result << " seconds. " << totalBytesIn << " bytes in / " << totalBytesOut << " bytes out." << endl;
 }
 
 void Huffman::inorderTraversal(node* p) {

@@ -2,7 +2,9 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
+#include <ctime> 
 #include "Huffman.h"
+
 
 
 using namespace std;
@@ -68,8 +70,11 @@ int main(int argc, char* argv[]) {
 
                 }
             }
-
+            
             myHuff->EncodeFile(argv2, outputFile);                   //argv2 is going to be the output file since no output file has been specified. 
+            
+             
+            
         }
         // MODE 4a: Output file has not been specified. 
 
@@ -120,6 +125,13 @@ int main(int argc, char* argv[]) {
             myHuff->EncodeFile(argv2, argv3);                           //Output file has been specified, therefore the encoded argv2 will be outputted into argv3
             exit(1);
         }
+        if (argv1 == "-me" && argv2.substr(0, 3) == "-o:" && argv3.substr(0, 3) == "-i:") {
+            argv2.erase(0, 3);
+            argv3.erase(0, 3);
+            myHuff->EncodeFile(argv3, argv2);                           //Output file has been specified, therefore the encoded argv2 will be outputted into argv3
+            exit(1);
+        }
+        
 
         // MODE 3: 
         if (argv1 == "-md" && argv2.substr(0, 3) == "-i:" && argv3.substr(0, 3) == "-o:") {
@@ -129,17 +141,30 @@ int main(int argc, char* argv[]) {
             exit(1);
         }
 
+        if (argv1 == "-md" && argv2.substr(0, 3) == "-o:" && argv3.substr(0, 3) == "-i:") {
+            argv2.erase(0, 3);
+            argv3.erase(0, 3);
+            myHuff->DecodeFile(argv3, argv2);
+            exit(1);
+        }
+
         // MODE 4b: Output file has been specified. 
         //  a. Use the name of argv2 as specified, even if the user didn't specify an extension. 
         //  b. The name of argv3 will be the name of the output file. 
 
-        else if (argv1 == "-mt" && argv2.substr(0, 3) == "-i:" && argv3.substr(0, 3) == "-o:") {
+        if (argv1 == "-mt" && argv2.substr(0, 3) == "-i:" && argv3.substr(0, 3) == "-o:") {
             argv2.erase(0, 3);
             argv3.erase(0, 3);
             myHuff->MakeTreeBuilder(argv2, argv3);
             exit(1);
         }
 
+        if (argv1 == "-mt" && argv2.substr(0, 3) == "-o:" && argv3.substr(0, 3) == "-i:") {
+            argv2.erase(0, 3);
+            argv3.erase(0, 3);
+            myHuff->MakeTreeBuilder(argv3, argv2);
+            exit(1);
+        }
 
         // MODE 5a: Outputfile has not been specified. 
         //  1. argv2 is the inputFile
@@ -156,6 +181,19 @@ int main(int argc, char* argv[]) {
                 outputFile.append(".huf");
             }
             myHuff->EncodeFileWithTree(argv2, argv3, outputFile);
+            exit(1);
+        }
+
+        if (argv1 == "-met" && argv2.substr(0, 3) == "-t:" && argv3.substr(0, 3) == "-i:") {
+            argv2.erase(0, 3);
+            argv3.erase(0, 3);
+
+            outputFile = argv3;
+            int fExtension = outputFile.find_last_of(".");
+            if (fExtension == string::npos) {
+                outputFile.append(".huf");
+            }
+            myHuff->EncodeFileWithTree(argv3, argv2, outputFile);
             exit(1);
         }
     }
@@ -177,9 +215,96 @@ int main(int argc, char* argv[]) {
         if (argv1 == "-met" && argv2.substr(0, 3) == "-i:" && argv3.substr(0, 3) == "-t:" && argv4.substr(0, 3) == "-o:") {
             argv2.erase(0, 3);
             argv3.erase(0, 3);
-            argv4.erase(0, 4);
+            argv4.erase(0, 3);
 
+            int fExtension = argv4.find_last_of(".");
+            if (fExtension == string::npos) { argv4.append(".huf"); }
+            else if (fExtension != string::npos) {
+                int i = argv4.rfind(".", argv4.length());
+
+                if (i != string::npos) { argv4.replace(i, argv4.length(), ".huf"); }
+            }
             myHuff->EncodeFileWithTree(argv2, argv3, argv4);
+            exit(1);
+        }
+
+        if (argv1 == "-met" && argv2.substr(0, 3) == "-i:" && argv3.substr(0, 3) == "-o:" && argv4.substr(0, 3) == "-t:") {
+            argv2.erase(0, 3);
+            argv3.erase(0, 3);
+            argv4.erase(0, 3);
+
+            int fExtension = argv3.find_last_of(".");
+            if (fExtension == string::npos) { argv3.append(".huf"); }
+            else if (fExtension != string::npos) {
+
+                int i = argv3.rfind(".", argv3.length());
+                if (i != string::npos) { argv3.replace(i, argv3.length(), ".huf"); }
+            }
+            myHuff->EncodeFileWithTree(argv2, argv4, argv3);
+            exit(1);
+        }
+
+        if (argv1 == "-met" && argv2.substr(0, 3) == "-o:" && argv3.substr(0, 3) == "-i:" && argv4.substr(0, 3) == "-t:") {
+            argv2.erase(0, 3);
+            argv3.erase(0, 3);
+            argv4.erase(0, 3);
+
+            int fExtension = argv2.find_last_of(".");
+            if (fExtension == string::npos) { argv2.append(".huf"); }
+            else if (fExtension != string::npos) {
+
+                int i = argv2.rfind(".", argv2.length());
+                if (i != string::npos) { argv2.replace(i, argv2.length(), ".huf"); }
+            }
+            myHuff->EncodeFileWithTree(argv3, argv4, argv2);
+            exit(1);
+        }
+
+        if (argv1 == "-met" && argv2.substr(0, 3) == "-o:" && argv3.substr(0, 3) == "-t:" && argv4.substr(0, 3) == "-i:") {
+            argv2.erase(0, 3);
+            argv3.erase(0, 3);
+            argv4.erase(0, 3);
+
+            int fExtension = argv2.find_last_of(".");
+            if (fExtension == string::npos) { argv2.append(".huf"); }
+            else if (fExtension != string::npos) {
+
+                int i = argv2.rfind(".", argv2.length());
+                if (i != string::npos) { argv2.replace(i, argv2.length(), ".huf"); }
+            }
+            myHuff->EncodeFileWithTree(argv4, argv3, argv2);
+            exit(1);
+        }
+
+        if (argv1 == "-met" && argv2.substr(0, 3) == "-t:" && argv3.substr(0, 3) == "-o:" && argv4.substr(0, 3) == "-i:") {
+            argv2.erase(0, 3);
+            argv3.erase(0, 3);
+            argv4.erase(0, 3);
+
+            int fExtension = argv3.find_last_of(".");
+            if (fExtension == string::npos) { argv3.append(".huf"); }
+            else if (fExtension != string::npos) {
+
+                int i = argv3.rfind(".", argv3.length());
+                if (i != string::npos) { argv3.replace(i, argv3.length(), ".huf"); }
+            }
+            myHuff->EncodeFileWithTree(argv4, argv2, argv3);
+            exit(1);
+        }
+
+        if (argv1 == "-met" && argv2.substr(0, 3) == "-t:" && argv3.substr(0, 3) == "-i:" && argv4.substr(0, 3) == "-o:") {
+            argv2.erase(0, 3);
+            argv3.erase(0, 3);
+            argv4.erase(0, 3);
+
+            int fExtension = argv4.find_last_of(".");
+            if (fExtension == string::npos) { argv4.append(".huf"); }
+            else if (fExtension != string::npos) {
+
+                int i = argv4.rfind(".", argv4.length());
+                if (i != string::npos) { argv4.replace(i, argv4.length(), ".huf"); }
+            }
+            myHuff->EncodeFileWithTree(argv3, argv2, argv4);
             exit(1);
         }
     }
