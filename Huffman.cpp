@@ -5,7 +5,7 @@
 #include <ctime> 
 
 Huffman::Huffman() {
-	root = NULL;
+	//root = NULL;
 }
 
 Huffman::~Huffman() {
@@ -50,7 +50,7 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 
 	in.open(inputFile, ios::binary);							// opening the given input file
 	if (!in.good()) {											// checking the input file for validity. If the file is not valid 
-		printf("File not found\n");								// output an error message and then exit. 
+		printf("Must specify valid input file\n");								// output an error message and then exit. 
 		exit(1);
 	}
 
@@ -137,12 +137,13 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 
 	in.open(inputFile, ios::binary);
 	if (!in.good()) {
-		printf("File not found\n");
+		printf("Must specify valid input file\n");
 		exit(1);
 	}
+
 	out.open(outputFile, ios::binary);
 	if (!out.good()) {											// Checking that output 
-		printf("File not found\n");
+		printf("Must specify valid output file\n");
 		exit(1);
 	}
 
@@ -150,9 +151,7 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 	int totalBytesOut = 0; 
 
 	while (!in.eof()) {
-
-		totalBytesOut++;										// Counter to count the number of bits going out
-		in.get(symbol);											// Get the next symbol 
+		unsigned char symbol = in.get(); 
 		buffer.append(arr_s[symbol]);							// Append the bitstring to the buffer
 
 		while (buffer.length() > 7) {
@@ -200,6 +199,7 @@ void Huffman::EncodeFile(string inputFile, string outputFile) {
 		out.put((unsigned char)arr_i[treeCounter]);				// Write Tree-building info to end of output file. 
 		treeCounter++;
 	}
+
 	out.close();												// Close the output file.
 	double endtime = clock(); 
 	double result = (endtime - begin) / CLOCKS_PER_SEC;
@@ -219,17 +219,9 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 	//		c. two statements above are completed down below with the long sequence of if statements. 
 	//  4. Output the decoded chars and make sure that it is byte identical to the encoded file. 
 
-	ifstream in;
+	
 	double begin = clock();										// Begin Timer for program. 
-
-	in.open(inputFile, ios::binary);
-	if (!in.good()) {
-		printf("File not found\n");
-		exit(1);
-	}
-
-
-	char symbol;
+	
 	for (int i = 0; i < 256; i++) {
 		arr[i] = new node;										// creating 256 nodes, i.e. arr[0]...arr[255] are a new node
 		arr[i]->weight = 0;										// initializing the weight(count) of each new node to 0.
@@ -237,16 +229,25 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 		arr[i]->left = NULL;									// each node's left and right child is initialized to NULL since they arent connected to anything yet. 
 		arr[i]->right = NULL;
 	}
-
-	in.seekg(-510, ios::end);									// Only reading the last 510 bytes in the file.
-	unsigned char b;
-
-	int totalBytesIn = 0; 
-	for (int i = 0; i < 510; i++) {
-		b = in.get();
-		decodeArray[i] = (unsigned int)b;						// Getting the sequences for tree building. 
+	
+	ifstream in;
+	in.open(inputFile, ios::binary);
+	if (!in.good()) {
+		printf("Must specify valid input file\n");
+		exit(1);
 	}
+	
+	
+	in.seekg(0, ios::end); 
+	int leng = in.tellg(); 
+	leng = leng - 510; 
 
+	in.seekg(leng, ios::beg); 
+
+	for (int i = 0; i < 510; i++) {
+		unsigned char b = in.get();								// get next char and store it. 
+		decodeArray[i] = (unsigned int)b;						// Getting tree building information. 
+	}
 	in.close();													// Close the input file. 
 
 //Build the Huffman Tree:
@@ -266,39 +267,37 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 	}
 
 	root = arr[0];												// Setting the root to be equal to first index in array
+	int totalBytesIn = 0;
 
 	ifstream inin;
 	inin.open(inputFile, ios::binary);							// Re-open at the begining of the input file. 
-	if (!inin.good()) {
-		printf("File not found\n");
-		exit(1);
-	}
-
 	inin.seekg(0, ios::end);
 	int length = inin.tellg();
-	length = length - 511;										// Make sure to read everything but the last 510-bytes of the file since the last 510-bytes are the tree building information. 
 
+	length = length - 510;										// Make sure to read everything but the last 510-bytes of the file since the last 510-bytes are the tree building information. 
+	totalBytesIn = length + 510; 
 	inin.seekg(0, ios::beg); 
+
 
 	ofstream out1;
 	out1.open(outputFile, ios::binary);							// Make sure that the output file can be opened. 
 	if (!out1.good()) {
-		printf("File not found\n");
+		printf("Must specify valid output file\n");
 		exit(1);
 	}
 
-	unsigned char bit;
+	unsigned char buffer;
 	node* p = root;
 
 	int totalBytesOut = 0; 
 	while (length > 0) {																					
 
-		bit = inin.get();										// Get the next symbol in the encoded file. 
+		buffer = inin.get();										// Get the next symbol in the encoded file. 
 
 	// If buffer[0] = 1, go right, else go left.
 	// (bit & 0x80) ? p->right : p->left;
 
-		if (bit & 0x80) {
+		if (buffer & 0x80) {
 			p = p->right;
 			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
@@ -310,7 +309,7 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 		// (bit & 0x40) ? p->right : p->left;
 
 
-		if (bit & 0x40) {
+		if (buffer & 0x40) {
 			p = p->right;
 			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
@@ -323,7 +322,7 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 		// (bit & 0x20) ? p->right : p->left;
 
 
-		if (bit & 0x20) {
+		if (buffer & 0x20) {
 			p = p->right;
 			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
@@ -336,7 +335,7 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 		// (bit & 0x10) ? p->right : p->left;
 
 
-		if (bit & 0x10) {
+		if (buffer & 0x10) {
 			p = p->right;
 			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
@@ -348,7 +347,7 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 		// If buffer[4] = 1 go right, else go left.
 		// (bit & 0x08) ? p->right : p->left;
 
-		if (bit & 0x08) {
+		if (buffer & 0x08) {
 			p = p->right;
 			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
@@ -360,7 +359,7 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 		// If buffer[5] = 1 go right, else go left. 
 		// (bit & 0x04) ? p->right : p->left;
 
-		if (bit & 0x04) {
+		if (buffer & 0x04) {
 			p = p->right;
 			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 
@@ -374,7 +373,7 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 		// If buffer[6] = 1 go right, else go left.
 		// (bit & 0x02) ? p->right : p->left;
 
-		if (bit & 0x02) {
+		if (buffer & 0x02) {
 			p = p->right;
 			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
@@ -386,7 +385,7 @@ void Huffman::DecodeFile(string inputFile, string outputFile) {
 		// If buffer[7] = 1 go right, else go left.
 		// (bit & 0x01) ? p->right : p->left;
 
-		if (bit & 0x01) {
+		if (buffer & 0x01) {
 			p = p->right;
 			if (p->right == NULL && p->left == NULL) { out1.put(p->symbol); totalBytesOut++; p = root; }
 		}
@@ -417,7 +416,11 @@ void Huffman::EncodeFileWithTree(string inputFile, string TreeFile, string outpu
 	double begin = clock();										// Begin Timer for program. 
 	inTree.open(TreeFile, ios::binary);
 
-	char symbol;
+	if (!inTree.good()) {
+		printf("Must specify valid tree building file\n");
+		exit(1);
+	}
+	char symbol; 
 	for (int i = 0; i < 256; i++) {
 		arr[i] = new node;										// creating 256 nodes, i.e. arr[0]...arr[255] are a new node
 		arr[i]->weight = 0;										// initializing the weight(count) of each new node to 0.
@@ -429,13 +432,13 @@ void Huffman::EncodeFileWithTree(string inputFile, string TreeFile, string outpu
 
 // Build the Huffman Tree from the specified ".htree" file. 
 
-	inTree.seekg(0, ios::beg);									// Only reading the last 510 bytes in the file.
+	int totalBytesIn = 0; 
 	unsigned char b;
 
-	int totalBytesIn = 0; 
 	for (int i = 0; i < 510; i++) {
 		b = inTree.get();
 		decodeArray[i] = (unsigned int)b;							// Getting the sequences for tree building. 
+		totalBytesIn++;
 	}
 	inTree.close();													// Close the Tree File file. 
 
@@ -463,13 +466,13 @@ void Huffman::EncodeFileWithTree(string inputFile, string TreeFile, string outpu
 
 	in.open(inputFile, ios::binary);
 	if (!in.good()) {
-		printf("File not found\n");
+		printf("Must specify valid input file\n");
 		exit(1);
 	}
 
 	out.open(outputFile, ios::binary);
 	if (!out.good()) {											// Checking that output file can be opened.  
-		printf("File not found\n");
+		printf("Must specify valid output file\n");
 		exit(1);
 	}
 
@@ -552,7 +555,7 @@ void Huffman::MakeTreeBuilder(string inputFile, string outputFile) {
 	double begin = clock();										// Begin Timer for program. 
 	in.open(inputFile, ios::binary);
 	if (!in.good()) {
-		printf("File not found\n");
+		printf("Must specify valid input file\n");
 		exit(1);
 	}
 
@@ -636,7 +639,7 @@ void Huffman::MakeTreeBuilder(string inputFile, string outputFile) {
 	ofstream out;
 	out.open(outputFile, ios::binary);
 	if (!out.good()) {
-		printf("File not found\n");
+		printf("Must specify valid output file\n");
 		exit(1);
 	}
 

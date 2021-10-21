@@ -13,18 +13,6 @@ int main(int argc, char* argv[]) {
 
     Huffman* myHuff = new Huffman();
 
-    // Mode 1 -- Show Help: Displays the proper usage options to the user and exits
-
-    if (argc == 2) {
-        string argv1(argv[1]);
-        if (argv1 == "-h" || argv1 == "-?" || argv1 == "-help") {
-            myHuff->displayHelp();
-            exit(1);
-
-        }
-    }
-
-
     // For all MODES:
     //  1. Need to check if "-i:" is a substring of the input file, if it is then we remove the pre-fix and pass the file to the appropriate function.
     //  2. If appropraite for the specified function:
@@ -33,10 +21,16 @@ int main(int argc, char* argv[]) {
     //      a. If one does exist then it needs to be removed and the appropriate extension needs to be
     //         appended to the end of the file. 
     //      b. If one does not exist, then the appropriate extension needs to be appended to the end of the file. 
+    // Mode 1 -- Show Help: Displays the proper usage options to the user and exits
+    
+    if (argc == 2) {
+        string argv1(argv[1]);
+        if (argv1 == "-h" || argv1 == "-?" || argv1 == "-help") {
+            myHuff->displayHelp();
+            exit(1);
 
-
-
-
+        }
+    }
 
     // MODES 2a & 4a: 
     //  Output file has not been specified, need to check if argv2 has an extension:
@@ -49,8 +43,8 @@ int main(int argc, char* argv[]) {
         string argv1(argv[1]);
         string argv2(argv[2]);
         string outputFile;
+  
         // MODE 2a: Output file has not been specified. 
-
         if (argv1 == "-me" && argv2.substr(0, 3) == "-i:") {    // check if "-i:" is a substring of argv2
             argv2.erase(0, 3);                                  // Erasing the prefix "-i:"
             outputFile = argv2;
@@ -59,22 +53,19 @@ int main(int argc, char* argv[]) {
             //  2. If there is no extension, append ".huf" to the end of it.   
 
             int fExtension = outputFile.find_last_of(".");           // Checking to see if the file has an extension
-            if (fExtension == string::npos) {                   // If there is no ".", then there is no extension,
+            if (fExtension == string::npos) {                        // If there is no ".", then there is no extension,
                 outputFile.append(".huf");                           // append ".huf" to the end of the file. 
 
             }
             else if (fExtension != string::npos) {
-                int i = outputFile.rfind(".", outputFile.length());        // Find the location of the start of the extension that we want to replace. 
-                if (i != string::npos) {                         // Variable i just hold the location of the found start of extension
-                    outputFile.replace(i, outputFile.length(), ".huf");    // Replace the current extension of the file, with the one that we want. 
+                int i = outputFile.rfind(".", outputFile.length());         // Find the location of the start of the extension that we want to replace. 
+                if (i != string::npos) {                                    // Variable i just hold the location of the found start of extension
+                    outputFile.replace(i, outputFile.length(), ".huf");     // Replace the current extension of the file, with the one that we want. 
 
                 }
             }
-            
-            myHuff->EncodeFile(argv2, outputFile);                   //argv2 is going to be the output file since no output file has been specified. 
-            
-             
-            
+            myHuff->EncodeFile(argv2, outputFile);                   //argv2 is going to be the output file since no output file has been specified.   
+            exit(1); 
         }
         // MODE 4a: Output file has not been specified. 
 
@@ -102,7 +93,6 @@ int main(int argc, char* argv[]) {
             myHuff->MakeTreeBuilder(argv2, outputFile);              //argv2 is going to be the output file since no output file has been specified. 
             exit(1);
         }
-
     }
 
     // MODES 2b, 3, 4b & 5a:
@@ -132,7 +122,6 @@ int main(int argc, char* argv[]) {
             exit(1);
         }
         
-
         // MODE 3: 
         if (argv1 == "-md" && argv2.substr(0, 3) == "-i:" && argv3.substr(0, 3) == "-o:") {
             argv2.erase(0, 3);
@@ -180,6 +169,14 @@ int main(int argc, char* argv[]) {
             if (fExtension == string::npos) {
                 outputFile.append(".huf");
             }
+            else if (fExtension != string::npos) {
+                int i = outputFile.rfind(".", outputFile.length());
+
+                if (i != string::npos) {
+                    outputFile.replace(i, outputFile.length(), ".huf");
+                }
+            }
+
             myHuff->EncodeFileWithTree(argv2, argv3, outputFile);
             exit(1);
         }
@@ -192,6 +189,13 @@ int main(int argc, char* argv[]) {
             int fExtension = outputFile.find_last_of(".");
             if (fExtension == string::npos) {
                 outputFile.append(".huf");
+            }
+            else if (fExtension != string::npos) {
+                int i = outputFile.rfind(".", outputFile.length());
+
+                if (i != string::npos) {
+                    outputFile.replace(i, outputFile.length(), ".huf");
+                }
             }
             myHuff->EncodeFileWithTree(argv3, argv2, outputFile);
             exit(1);
@@ -308,6 +312,5 @@ int main(int argc, char* argv[]) {
             exit(1);
         }
     }
-
     return 0;
 }
